@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      margin: 40px;
+      background-color: #f5f5f5;
+    }
+
+    #start-screen {
+      display: block;
+    }
+
+    #game-screen, #human-game, #robot-game {
+      display: none;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    #start-button, #human-button, #robot-button, #replay-button-robot, #human-back-button, #robot-back-button, #replay-button-human {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      margin: 10px;
+      transition: background-color 0.3s;
+    }
+
+    #start-button:hover, #human-button:hover, #robot-button:hover, #replay-button-robot:hover, #human-back-button, #robot-back-button, #replay-button-human:hover {
+      background-color: #45a049;
+    }
+    #replay-button-robot:hover,
+#replay-button-human:hover {
+  background-color: #45a049;
+}
+
+
+    .board{
+      position: relative;
+      left: 40%;
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      grid-gap: 5px;
+      margin-top: 20px;
+      animation: fadeIn 1s;
+      
+    }
+
+    .cell {
+      width: 80px;
+      height: 80px;
+      border: 1px solid #ccc;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.3s;
+    }
+
+    .cell:hover {
+      background-color: #ddd;
+    }
+
+    .message {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    #replay-button-container-robot, #replay-button-container-human {
+      display: none;
+      margin-top: 20px;
+    }
+  </style>
+  <title>Tic Tac Toe</title>
+</head>
+<body>
+
+  <div id="start-screen">
+    <h1>Tic Tac Toe</h1>
+    <button id="start-button">Play</button>
+  </div>
+
+  <div id="game-screen">
+    <button id="human-button">Play with Human</button>
+    <button id="robot-button">Play with Robot</button>
+  </div>
+  <div id="human-game">
+    <div id="back-button-container" >
+      <button id="human-back-button">Back</button>
+    </div>
+    <div class="board" id="human-board"></div>
+    <div class="message" id="human-message">Player X's turn</div>
+    <div id="replay-button-container-human">
+      <button id="replay-button-human">Replay</button>
+    </div>
+  </div>
+  
+  <div id="robot-game">
+    <div id="back-button-container" >
+      <button id="robot-back-button">Back</button>
+    </div>
+    <div class="board" id="robot-board"></div>
+    <div class="message" id="robot-message">Player X's turn</div>
+    <div id="replay-button-container-robot">
+      <button id="replay-button-robot">Replay</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const startScreen = document.getElementById("start-screen");
+      const gameScreen = document.getElementById("game-screen");
+      const humanGame = document.getElementById("human-game");
+      const robotGame = document.getElementById("robot-game");
+      const startButton = document.getElementById("start-button");
+      const humanButton = document.getElementById("human-button");
+      const robotButton = document.getElementById("robot-button");
+     
+  const replayButtonContainerHuman = document.getElementById("replay-button-container-human");
+  const replayButtonHuman = document.getElementById("replay-button-human");
+  const humanMessage = document.getElementById("human-message");
+
+  const replayButtonContainerRobot = document.getElementById("replay-button-container-robot");
+  const replayButtonRobot = document.getElementById("replay-button-robot");
+  const robotMessage = document.getElementById("robot-message");
+
+      const humanBoard = document.getElementById("human-board");
+      const robotBoard = document.getElementById("robot-board");
+      const humanBackButton = document.getElementById("human-back-button");
+      const robotBackButton = document.getElementById("robot-back-button");
+      //const robotBoard = document.getElementById("robot-game-board");
+      const humanCells = [];
+      const robotCells = [];
+      let currentPlayer = "X";
+      let humanGameOver = false;
+      let robotGameOver = false;
+
+      startButton.addEventListener("click", () => {
+        startScreen.style.display = "none";
+        gameScreen.style.display = "block";
+      });
+
+      humanButton.addEventListener("click", () => {
+        humanGame.style.display = "block";
+        gameScreen.style.display = "none";
+        resetGame(true);
+      });
+
+      robotButton.addEventListener("click", () => {
+        robotGame.style.display = "block";
+        gameScreen.style.display = "none";
+        resetGame(true);
+        if (currentPlayer === "O") {
+          makeRobotMove();
+        }
+      });
+
+      humanBackButton.addEventListener("click",() => {
+        humanGame.style.display = "none";
+        gameScreen.style.display = "block";
+       });
+
+       robotBackButton.addEventListener("click",() => {
+        robotGame.style.display = "none";
+        gameScreen.style.display = "block";
+       });
+// For the human game screen
+replayButtonHuman.addEventListener("click", () => {
+  resetGame(true);
+});
+
+// For the robot game screen
+replayButtonRobot.addEventListener("click", () => {
+  resetGame(false);
+  if (currentPlayer === "O") {
+    makeRobotMove();
+  }
+});
+ // Create the human board
+ for (let i = 0; i < 9; i++) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.dataset.index = i;
+      cell.addEventListener("click", () => makeHumanMove(i));
+      humanBoard.appendChild(cell);
+      humanCells.push(cell);
+    }
+
+    // Create the robot board
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.dataset.index = i;
+      cell.addEventListener("click", () => makeHMoveInR(i));
+      robotBoard.appendChild(cell);
+      robotCells.push(cell);
+    }
+  
+
+      // Function to handle a human move
+      function makeHumanMove(index) {
+        if (humanGameOver || humanCells[index].textContent !== "") return;
+
+        humanCells[index].textContent = currentPlayer;
+        if (checkHumanWinner()) {
+          humanGameOver = true;
+          displayHumanMessage(`Player ${currentPlayer} wins!`);
+          showReplayButton(true);
+        } else if (isHumanBoardFull()) {
+          humanGameOver = true;
+          displayHumanMessage("It's a draw!");
+          showReplayButton(true);
+        } else {
+          currentPlayer = currentPlayer === "X" ? "O" : "X";
+          displayHumanMessage(`Player ${currentPlayer}'s turn`);
+        }
+      }
+
+      // Function to handle the human move in the robot game
+      function makeHMoveInR(index){
+        if (robotGameOver || robotCells[index].textContent !== "") return;
+
+        robotCells[index].textContent = currentPlayer;
+        if(checkRobotWinner()){
+          robotGameOver = true;
+          displayRobotMessage(`Player ${currentPlayer} wins!`);
+          showReplayButton(true);
+        }
+        else if (isRobotBoardFull()) {
+          robotGameOver = true;
+          displayRobotMessage("It's a draw!");
+          showReplayButton(true);
+        }
+         else {
+          currentPlayer = currentPlayer === "X" ? "O" : "X";
+          displayRobotMessage(`Player ${currentPlayer}'s turn`);
+          if (currentPlayer === "O") {
+            makeRobotMove(index);
+          }
+        }
+      }
+
+      // Function to check for a human winner
+      function checkHumanWinner() {
+        const winPatterns = [
+          [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+          [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+          [0, 4, 8], [2, 4, 6]             // Diagonals
+        ];
+
+        return winPatterns.some(pattern =>
+          humanCells[pattern[0]].textContent !== "" &&
+          humanCells[pattern[0]].textContent === humanCells[pattern[1]].textContent &&
+          humanCells[pattern[1]].textContent === humanCells[pattern[2]].textContent
+        );
+      }
+
+      //
+      function checkRobotWinner() {
+        const winPatterns = [
+          [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+          [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+          [0, 4, 8], [2, 4, 6]             // Diagonals
+        ];
+
+        return winPatterns.some(pattern =>
+          robotCells[pattern[0]].textContent !== "" &&
+          robotCells[pattern[0]].textContent === robotCells[pattern[1]].textContent &&
+          robotCells[pattern[1]].textContent === robotCells[pattern[2]].textContent
+        );
+      }
+
+      // Function to check if the human board is full (a draw)
+      function isHumanBoardFull() {
+        return humanCells.every(cell => cell.textContent !== "");
+      }
+
+      // Function to check if the human board is full (a draw)
+      function isRobotBoardFull() {
+        return robotCells.every(cell => cell.textContent !== "");
+      }
+    // Function to display a human message
+function displayHumanMessage(message) {
+  humanMessage.textContent = message;
+}
+
+// Function to display a robot message
+function displayRobotMessage(message) {
+  robotMessage.textContent = message;
+}
+
+      
+
+
+function makeRobotMove(index) {
+  const emptyCells = robotCells.filter(cell => cell.textContent === "");
+  if (emptyCells.length > 0 && !robotGameOver) {
+    const randomIndex = Math.floor(Math.random() * emptyCells.length);
+    const cell = emptyCells[randomIndex];
+    const moveIndex = cell.dataset.index;
+
+    // Update the game state
+    robotCells[moveIndex].textContent = currentPlayer;
+
+    if (checkRobotWinner()) {
+      robotGameOver = true;
+      displayRobotMessage(`Player ${currentPlayer} wins!`);
+      showReplayButton(false);
+    } else if (isRobotBoardFull()) {
+      robotGameOver = true;
+      displayRobotMessage("It's a draw!");
+      showReplayButton(false);
+    } else {
+      currentPlayer = currentPlayer === "X" ? "O" : "X";
+      displayRobotMessage(`Player ${currentPlayer}'s turn`);
+    }
+  }
+}
+
+
+
+
+      // Function to reset the game
+      function resetGame(isHuman) {
+        if (isHuman) {
+          humanCells.forEach(cell => {
+            cell.textContent = "";
+          });
+          currentPlayer = "X";
+          humanGameOver = false;
+          displayHumanMessage(`Player ${currentPlayer}'s turn`);
+          hideReplayButton(true);
+        } else {
+          robotCells.forEach(cell => {
+            cell.textContent = "";
+          });
+          currentPlayer = "O";
+          robotGameOver = false;
+          displayRobotMessage(`Player ${currentPlayer}'s turn`);
+          hideReplayButton(true);
+          if (currentPlayer === "O") {
+            makeRobotMove();
+          }
+        }
+      }
+
+ // Function to show the replay button
+function showReplayButton(isHuman) {
+  if (isHuman) {
+    replayButtonContainerHuman.style.display = "block";
+  } else {
+    replayButtonContainerRobot.style.display = "block";
+  }
+}
+
+// Function to hide the replay button
+function hideReplayButton(isHuman) {
+  if (isHuman) {
+    replayButtonContainerHuman.style.display = "none";
+  } else {
+    replayButtonContainerRobot.style.display = "none";
+  }
+}
+
+// For the human game screen
+replayButtonHuman.addEventListener("click", () => {
+  resetGame(true);
+});
+
+// For the robot game screen
+replayButtonRobot.addEventListener("click", () => {
+  resetGame(false);
+  if (currentPlayer === "O") {
+    makeRobotMove();
+  }
+});
+
+
+    });
+  </script>
+
+</body>
+</html>
